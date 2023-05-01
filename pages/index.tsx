@@ -271,7 +271,7 @@ const IndexPage = () => {
             after: string
           }
         }
-        impedancesBefore = [section.impedances.before]
+        impedancesBefore = [(section.impedances as any).before]
         z1 = impedancesBefore.reduce((acc, val) => acc + 1 / Number(val), 0)
       } else {
         section = section as {
@@ -281,7 +281,7 @@ const IndexPage = () => {
           }
           velocity: number
         }
-        propagationTime = section.length / section.velocity
+        propagationTime = (section as any).length / (section as any).velocity
         impedancesBefore = [...sections[i - 1].impedancesAfter]
         z1 = sections[i - 1].z2
       }
@@ -436,6 +436,7 @@ const IndexPage = () => {
                           valueAsNumber: true
                         })}
                         placeholder='Length'
+                        // @ts-expect-error
                         error={!!errors.sections?.[i]?.length}
                         endDecorator={
                           <>
@@ -444,6 +445,7 @@ const IndexPage = () => {
                           </>
                         }
                       />
+                      {/* @ts-expect-error */}
                       {!!errors.sections?.[i]?.length && (
                         <FormHelperText>
                           {/* @ts-expect-error */}
@@ -458,6 +460,7 @@ const IndexPage = () => {
                           valueAsNumber: true
                         })}
                         placeholder='Velocity'
+                        // @ts-expect-error
                         error={!!errors.sections?.[i]?.velocity}
                         endDecorator={
                           <>
@@ -466,6 +469,7 @@ const IndexPage = () => {
                           </>
                         }
                       />
+                      {/* @ts-expect-error */}
                       {!!errors.sections?.[i]?.velocity && (
                         <FormHelperText>
                           {/* @ts-expect-error */}
