@@ -9,11 +9,22 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@emotion/react": "^11.10.8",
+    "@emotion/styled": "^11.10.8",
+    "@hookform/resolvers": "^3.1.0",
+    "@mui/joy": "^5.0.0-alpha.77",
+    "framer-motion": "^10.12.4",
     "next": "13.3.2",
     "react": "18.2.0",
-    "react-dom": "18.2.0"
+    "react-dom": "18.2.0",
+    "react-hook-form": "^7.43.9",
+    "react-icons": "^4.8.0",
+    "recharts": "^2.5.0",
+    "zod": "^3.21.4"
   },
   "devDependencies": {
+    "@types/node": "18.16.3",
+    "@types/react": "18.2.0",
     "eslint": "8.39.0",
     "eslint-config-next": "13.3.2"
   }
