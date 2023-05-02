@@ -145,6 +145,133 @@ const IndexPage = () => {
   const addSection = () => {
     append(makeSection())
   }
+  const calculateCurrentLattice = (
+    sections: {
+      propagationTime: number
+      forwardRho: number
+      forwardTau: number
+      reverseRho: number
+      reverseTau: number
+      z1: number
+      z2: number
+      impedancesBefore: number[]
+      impedancesAfter: number[]
+    }[],
+    voltage: number,
+    sectionIndex: number = 0,
+    time: number = 0,
+    direction: 'F' | 'R' = 'F'
+  ) => {
+    const results: {
+      time: number
+      current: number
+    }[][][] = []
+
+    for (let i = 0; i < getValues('sections').length; i++) {
+      results.push([])
+      for (let j = 0; j < sections[i].impedancesAfter.length; j++) {
+        results[i].push([])
+      }
+    }
+    const executionTime = getValues('time')
+
+    const _calculate = (
+      sections: {
+        propagationTime: number
+        forwardRho: number
+        forwardTau: number
+        reverseRho: number
+        reverseTau: number
+        z1: number
+        z2: number
+        impedancesBefore: number[]
+        impedancesAfter: number[]
+      }[],
+      voltage: number,
+      sectionIndex: number = 0,
+      time: number = 0,
+      direction: 'F' | 'R' = 'F'
+    ) => {
+      if (time > executionTime) return
+      const section = sections[sectionIndex]
+      let tau = direction === 'F' ? section.forwardTau : section.reverseTau
+      let rho = direction === 'F' ? section.forwardRho : section.reverseRho
+
+      const transmittedVoltage = voltage * tau
+      const reflectedVoltage = voltage * rho
+      for (const [
+        impedanceIndex,
+        impedance
+      ] of section.impedancesAfter.entries()) {
+        results[sectionIndex][impedanceIndex].push({
+          time,
+          current:
+            ((direction === 'F'
+              ? transmittedVoltage
+              : -1 * transmittedVoltage) *
+              1000) /
+            (direction === 'F' ? impedance : section.impedancesBefore[0])
+        })
+      }
+
+      // if not the last section, go more forward
+      if (sectionIndex < sections.length - 1)
+        _calculate(
+          sections,
+          direction === 'F' ? transmittedVoltage : reflectedVoltage,
+          sectionIndex + 1,
+          time + sections[sectionIndex + 1].propagationTime
+        )
+      // if not the first section, you can go backward (reverse)
+      if (sectionIndex > 0)
+        _calculate(
+          sections,
+          direction === 'F' ? reflectedVoltage : transmittedVoltage,
+          sectionIndex - 1,
+          time + section.propagationTime,
+          'R'
+        )
+    }
+
+    _calculate(sections, voltage, sectionIndex, time, direction)
+    // console.log(results)
+    return results.map((section, j) => {
+      section = section.map(branch => branch.sort((a, b) => a.time - b.time)) // sort by time
+      const s: typeof section = []
+
+      for (const [branchIndex, branch] of section.entries()) {
+        s.push([])
+        for (const [pointIndex, point] of branch.entries()) {
+          // console.log(s)
+          // force start from zero
+          if (pointIndex === 0 && point.time !== 0)
+            s[branchIndex].push({
+              time: 0,
+              current: 0
+            })
+          if (pointIndex > 0) {
+            if (s[branchIndex].at(-1)!.time === point.time)
+              s[branchIndex].at(-1)!.current += point.current
+            else
+              s[branchIndex].push({
+                ...point,
+                current: point.current + s[branchIndex].at(-1)!.current
+              })
+          } else s[branchIndex].push(point)
+          // force end to execution time
+          if (
+            pointIndex === section[branchIndex].length - 1 &&
+            point.time !== executionTime
+          )
+            s[branchIndex].push({
+              time: executionTime,
+              current: s[branchIndex].at(-1)!.current
+            })
+        }
+      }
+      return s
+    })
+  }
 
   const calculateLattice = (
     sections: {
@@ -315,26 +442,11 @@ const IndexPage = () => {
         impedancesAfter
       })
     }
-    console.log(sections)
+    // console.log(sections)
     const voltageResults = calculateLattice(sections, data.amplitude)
 
-    const currentResults = []
-    for (const [sectionIndex, section] of sections.entries()) {
-      currentResults.push([])
-      for (
-        let branchIndex = 0;
-        branchIndex < section.impedancesAfter.length;
-        branchIndex++
-      ) {
-        currentResults[sectionIndex].push([])
-        currentResults[sectionIndex][branchIndex] = voltageResults[
-          sectionIndex
-        ].map(r => ({
-          time: r.time,
-          current: (r.voltage * 1000) / section.impedancesAfter[branchIndex]
-        }))
-      }
-    }
+    const currentResults = calculateCurrentLattice(sections, data.amplitude)
+    console.log(currentResults)
 
     setResults({
       voltageResults,
