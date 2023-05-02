@@ -27,6 +27,7 @@ import {
 } from '@mui/joy'
 import Link from 'next/link'
 import Layout from './layout'
+import Head from 'next/head'
 
 const MotionBox = motion(Box)
 
@@ -111,8 +112,7 @@ const IndexPage = () => {
     register,
     formState: { errors },
     handleSubmit,
-    getValues,
-    setValue
+    getValues
   } = useForm<FieldValues>({
     defaultValues: {
       sections: [makeSection()]
@@ -138,11 +138,6 @@ const IndexPage = () => {
     name: 'sections'
   })
 
-  // useEffect(() => {
-  //   setValue('sections.0.length', 10)
-  //   setValue('sections.0.velocity', 10)
-  // }, [sections])
-
   const addSection = () => {
     append(makeSection())
   }
@@ -163,7 +158,6 @@ const IndexPage = () => {
     const results: {
       time: number
       voltage: number
-      // reflectedVoltage: number
     }[][] = []
 
     for (let i = 0; i < getValues('sections').length; i++) results.push([])
@@ -193,7 +187,6 @@ const IndexPage = () => {
       results[sectionIndex].push({
         time,
         voltage: transmittedVoltage
-        // reflectedVoltage
       })
 
       // if not the last section, go more forward
@@ -317,6 +310,9 @@ const IndexPage = () => {
 
   return (
     <Layout>
+      <Head>
+        <title>Lattice builder</title>
+      </Head>
       <Container>
         <Box
           sx={{
@@ -552,7 +548,7 @@ const IndexPage = () => {
                   }
                 />
                 <Legend />
-                <Line dataKey='voltage' type='step' />
+                <Line dataKey='voltage' type='stepAfter' />
               </LineChart>
             </ResponsiveContainer>
           </Box>

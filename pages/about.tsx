@@ -17,10 +17,14 @@ import {
 } from 'react-icons/fa'
 import { MdAnimation } from 'react-icons/md'
 import Layout from './layout'
+import Head from 'next/head'
 
 const AboutPage = () => {
   return (
     <Layout>
+      <Head>
+        <title>About</title>
+      </Head>
       <Container>
         <Box
           sx={{
@@ -101,7 +105,7 @@ const AboutPage = () => {
         <Typography>
           Lastly, this project is open source, you can find it{' '}
           <JoyLink
-            href='https://github.com/abdullahahmeda/lattice-builder'
+            href='https://github.com/abdullahahmeda/lattice-builder-next'
             component={Link}
             rel='_'
           >
