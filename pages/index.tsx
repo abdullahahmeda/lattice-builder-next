@@ -122,12 +122,16 @@ const IndexPage = () => {
   })
 
   // TODO: types
-  const [resutls, setResults] = useState<
-    {
+  const [resutls, setResults] = useState<{
+    voltageResults: {
       time: number
       voltage: number
     }[][]
-  >()
+    currentResults: {
+      time: number
+      current: number
+    }[][][]
+  }>()
 
   const {
     fields: sections,
@@ -149,6 +153,10 @@ const IndexPage = () => {
       forwardTau: number
       reverseRho: number
       reverseTau: number
+      z1: number
+      z2: number
+      impedancesBefore: number[]
+      impedancesAfter: number[]
     }[],
     voltage: number,
     sectionIndex: number = 0,
@@ -170,6 +178,10 @@ const IndexPage = () => {
         forwardTau: number
         reverseRho: number
         reverseTau: number
+        z1: number
+        z2: number
+        impedancesBefore: number[]
+        impedancesAfter: number[]
       }[],
       voltage: number,
       sectionIndex: number = 0,
@@ -212,6 +224,7 @@ const IndexPage = () => {
     return results.map(section => {
       section = [...section].sort((a, b) => a.time - b.time) // sort by time
       const s: typeof section = []
+
       for (const [i, point] of section.entries()) {
         // force start from zero
         if (i === 0 && point.time !== 0)
@@ -303,9 +316,30 @@ const IndexPage = () => {
       })
     }
     console.log(sections)
-    const results = calculateLattice(sections, data.amplitude)
+    const voltageResults = calculateLattice(sections, data.amplitude)
 
-    setResults(results)
+    const currentResults = []
+    for (const [sectionIndex, section] of sections.entries()) {
+      currentResults.push([])
+      for (
+        let branchIndex = 0;
+        branchIndex < section.impedancesAfter.length;
+        branchIndex++
+      ) {
+        currentResults[sectionIndex].push([])
+        currentResults[sectionIndex][branchIndex] = voltageResults[
+          sectionIndex
+        ].map(r => ({
+          time: r.time,
+          current: (r.voltage * 1000) / section.impedancesAfter[branchIndex]
+        }))
+      }
+    }
+
+    setResults({
+      voltageResults,
+      currentResults
+    })
   }
 
   return (
@@ -364,7 +398,7 @@ const IndexPage = () => {
           <Typography level='h3' sx={{ mb: 0.5 }}>
             Sections
           </Typography>
-          <AnimatePresence>
+          <AnimatePresence initial={false}>
             {sections.map((section, i) => (
               <MotionBox
                 initial={{ opacity: 0 }}
@@ -505,7 +539,7 @@ const IndexPage = () => {
             </Button>
           </div>
         </form>
-        {resutls?.map((data, index) => (
+        {resutls?.voltageResults.map((data, index) => (
           <Box key={index} sx={{ mt: 2 }}>
             <Typography level='h4'>Junction {index + 1}</Typography>
             <ResponsiveContainer height={300} className='mt-4'>
@@ -551,6 +585,55 @@ const IndexPage = () => {
                 <Line dataKey='voltage' type='stepAfter' />
               </LineChart>
             </ResponsiveContainer>
+            {resutls.currentResults[index].map((branchData, branchIndex) => (
+              <ResponsiveContainer
+                height={300}
+                className='mt-4'
+                key={branchIndex}
+              >
+                <LineChart
+                  height={300}
+                  data={branchData}
+                  margin={{
+                    top: 5,
+                    right: 0,
+                    left: 0,
+                    bottom: 5
+                  }}
+                >
+                  <CartesianGrid strokeDasharray='3 3' />
+                  <XAxis
+                    dataKey='time'
+                    // label={{
+                    //   value: `Junction ${index + 1}`,
+                    //   position: 'insideBottomLeft',
+                    //   offset: -10
+                    // }}
+                    type='number'
+                    // domain={[0, 'dataMax + 1']}
+                    unit='µs'
+                    // tickCount={getValues('time')}
+                  />
+                  <YAxis
+                  // domain={[0, dataMax => Math.round(dataMax + 15)]}
+                  />
+                  <Tooltip
+                    formatter={(value, name, item) => [
+                      (value as number).toFixed(2) + ' A',
+                      'current'
+                    ]}
+                    labelFormatter={label =>
+                      `time: ${new Intl.NumberFormat('en-US', {
+                        style: 'unit',
+                        unit: 'microsecond'
+                      }).format(label)}`
+                    }
+                  />
+                  <Legend />
+                  <Line dataKey='current' type='stepAfter' />
+                </LineChart>
+              </ResponsiveContainer>
+            ))}
           </Box>
         ))}
       </Container>
