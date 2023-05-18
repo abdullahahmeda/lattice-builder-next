@@ -536,7 +536,7 @@ const IndexPage = () => {
                         valueAsNumber: true
                       })}
                       placeholder='Impedance before the section'
-                      error={!!errors.sections?.[0].impedances?.before}
+                      error={!!errors.sections?.[i].impedances?.before}
                       endDecorator={
                         <>
                           <Divider orientation='vertical' />
@@ -544,7 +544,7 @@ const IndexPage = () => {
                         </>
                       }
                     />
-                    {!!errors.sections?.[0].impedances?.before && (
+                    {!!errors.sections?.[i].impedances?.before && (
                       <FormHelperText>
                         {errors.sections?.[i]?.impedances?.before?.message}
                       </FormHelperText>
@@ -555,7 +555,7 @@ const IndexPage = () => {
                   <Input
                     {...register(`sections.${i}.impedances.after`)}
                     placeholder='Impedance after the section'
-                    error={!!errors.sections?.[0].impedances?.after}
+                    error={!!errors.sections?.[i].impedances?.after}
                     endDecorator={
                       <>
                         <Divider orientation='vertical' />
@@ -563,7 +563,7 @@ const IndexPage = () => {
                       </>
                     }
                   />
-                  {!!errors.sections?.[0].impedances?.after && (
+                  {!!errors.sections?.[i].impedances?.after && (
                     <FormHelperText>
                       {errors.sections?.[i]?.impedances?.after?.message}
                     </FormHelperText>
